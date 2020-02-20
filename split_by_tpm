@@ -1,0 +1,29 @@
+#usage: python split_by_tpm.py [input_file]
+#output: *_c1.txt , *_c2.txt, *_c3.txt, *_c4.txt (*input file name)
+import os,sys
+
+f_n = sys.argv[1]
+f_r = file(f_n, 'r')
+header = f_n.split('.')[0]
+
+fw1 = file('%s_c1.txt' %header, 'w')
+fw2 = file('%s_c2.txt' %header, 'w')
+fw3 = file('%s_c3.txt' %header, 'w')
+fw4 = file('%s_c4.txt' %header, 'w')
+fw1.write('gene_name    k4m1_to_peak	k4m1_s  k4m1_e   k4m3_to_peak  k4m3_s   k4m3_e   tpm\n')
+fw2.write('gene_name    k4m1_to_peak	k4m1_s  k4m1_e   k4m3_to_peak  k4m3_s   k4m3_e   tpm\n')
+fw3.write('gene_name    k4m1_to_peak	k4m1_s  k4m1_e   k4m3_to_peak  k4m3_s   k4m3_e   tpm\n')
+fw4.write('gene_name    k4m1_to_peak	k4m1_s  k4m1_e   k4m3_to_peak  k4m3_s   k4m3_e   tpm\n')
+
+for line in f_r:
+    if line[0]=='g':continue
+    tpm_v = float(line.split()[-1])
+    if tpm_v <= 1:
+        fw1.write(line)
+    elif tpm_v <= 5 and tpm_v > 1:
+        fw2.write(line)
+    elif tpm_v <= 10 and tpm_v >5:
+        fw3.write(line)
+    elif tpm_v >10:
+        fw4.write(line)
+
