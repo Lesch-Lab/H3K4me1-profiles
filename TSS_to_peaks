@@ -1,0 +1,110 @@
+#usage:python [script.py] [H3K4me1_peak_file] [H3K4me3_peak_file] [TSS_list] [output_name]
+
+import sys, os
+import numpy as np
+
+#get name of all input
+f_chip1 = sys.argv[1]
+f_chip2 = sys.argv[2]
+f_tss = sys.argv[3]
+f_name = sys.argv[4]
+
+#open output file
+f_w = file(f_name, 'w')
+f_w.write('gene_name    k4m1_to_peak	k4m1_s  k4m1_e   k4m3_to_peak  k4m3_s   k4m3_e\n')
+
+#open input file
+f_c1 = file(f_chip1, 'r')
+f_c2 = file(f_chip2, 'r')
+f_t = file(f_tss, 'r')
+
+#initialize lists
+l_c1 = []
+l_c2 = []
+l_t = []
+
+
+for line in f_t:
+    tmp = line.split()
+    if tmp[1]=='start':continue
+    sta = int(tmp[1])
+    end = int(tmp[2])
+    chrm = tmp[0]
+    gen_n = tmp[4]
+    sense = tmp[-2]
+    p_c = tmp[-1]
+    l_t.append([p_c, chrm, gen_n, sense])
+
+
+for line in f_c1:
+    tmp = line.split()
+    chrm = tmp[0]
+    sta = tmp[1]
+    end = tmp[2]
+    if len(chrm.split('_'))>3:continue
+    l_c1.append([sta, end, chrm])
+
+for line in f_c2:
+    tmp = line.split()
+    chrm = tmp[0]
+    sta = tmp[1]
+    end = tmp[2]
+    if len(chrm.split('_'))>3:continue
+    l_c2.append([sta, end, chrm])
+
+for i in range(len(l_t)):
+    min_d = 0
+    min_inx = []
+    d_1 = 99999999
+    d_2 = 99999999
+    s_1 = 99999999
+    s_2 = 99999999
+    e_1 = 99999999
+    e_2 = 99999999
+    for j in range(len(l_c1)):
+        dist = 0
+        if l_t[i][1] != l_c1[j][2]: continue #make sure chromosomes match
+        s1 = int(l_c1[j][0])
+        e1 = int(l_c1[j][1])
+        p_c2 = int(l_t[i][0])
+        sense = int(l_t[i][3])
+        p_c1 = (s1+e1)/2 #peak center
+        dist = (p_c2 - p_c1)*sense*-1
+        if (len(min_inx)<4):
+            min_inx.append([l_c1[j][0], l_c1[j][1], dist])
+            min_inx = sorted(min_inx, key=lambda row: np.abs(row[2]), reverse=True)
+            min_d = abs(min_inx[-1][2])
+        else:
+            if min_d < abs(dist): continue
+            min_d = abs(dist)
+            min_inx.append([l_c1[j][0], l_c1[j][1], dist]) #for peak, measure from center	
+    if len(min_inx)>1:
+        d_1 = int(min_inx[-1][2])
+        s_1 = int(min_inx[-1][0])
+        e_1 = int(min_inx[-1][1])
+    elif len(min_inx)==0: continue
+    
+    min_d = 0
+    min_inx = []
+    for k in range(len(l_c2)):
+        dist = 0
+        if l_t[i][1] != l_c2[k][2]: continue
+        s1 = int(l_c2[k][0])
+        e1 = int(l_c2[k][1])
+        p_c2 = int(l_t[i][0])
+        p_c1 = (s1+e1)/2 #peak center
+        dist = (p_c2 - p_c1)*sense*-1
+        if (len(min_inx)<4):
+            min_inx.append([l_c2[k][0], l_c2[k][1], dist])
+            min_inx = sorted(min_inx, key=lambda row: np.abs(row[2]), reverse=True)
+            min_d = abs(min_inx[-1][2])
+        else:
+            if min_d < abs(dist): continue
+            min_d = abs(dist)
+            min_inx.append([l_c2[k][0], l_c2[k][1], dist]) #for peak, measure from center	
+    if len(min_inx)>1:
+        d_2 = int(min_inx[-1][2])
+        s_2 = int(min_inx[-1][0])
+        e_2 = int(min_inx[-1][1])
+    elif len(min_inx)==0: continue
+    f_w.write('%s	%8d	%8d	%8d	%8d	%8d	%8d\n' %(l_t[i][2], d_1, s_1, e_1, d_2, s_2, e_2))
