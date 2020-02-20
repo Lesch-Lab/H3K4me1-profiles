@@ -1,0 +1,43 @@
+library(ggplot2)
+
+#density plot
+file_path = [specify file path] #file path for mPS_density.txt
+mPS <-read.table(file_path, header = TRUE, sep = "", dec = ".")
+mPS_d <- density(mPS$dist_1, bw=15)
+plot(mPS_d, xlim=c(-2000,2000), main= "H3K4me1 in Human Pachytene Spermatocytes", xlab="distance to nearest TSS (bp)", ylab="density level")
+
+
+#heatmap
+file_path = [specify file path] #file path for mPS_K4.txt
+mPS_K4 <-read.table(file_path, header = TRUE, sep = "", dec = ".")
+
+ggplot(mPS_K4, aes(x=data4$k4m1_to_peak, y=data4$k4m3_to_peak) )  + 
+  xlab('distance to nearest H3K4me1 (bp)') + ylab('distance to nearest H3K4me3 (bp)') +
+  geom_bin2d(bins = 40) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  scale_fill_gradientn(colors = c("#FFEDA0", "#FEB24C", "#F03B20")) + 
+  xlim(-2000,2000) +ylim(-2000,2000)
+
+
+#tpm violin plot
+file_path1 = [specify file path] #file path for mPS_K4_tpm_c1.txt
+file_path2 = [specify file path] #file path for mPS_K4_tpm_c2.txt
+file_path3 = [specify file path] #file path for mPS_K4_tpm_c3.txt
+file_path4 = [specify file path] #file path for mPS_K4_tpm_c4.txt
+mPS_L1<-read.table(file_path1, header = TRUE, sep = "", dec = ".")
+mPS_L2<-read.table(file_path2, header = TRUE, sep = "", dec = ".")
+mPS_L3<-read.table(file_path3, header = TRUE, sep = "", dec = ".")
+mPS_L4<-read.table(file_path4, header = TRUE, sep = "", dec = ".")
+
+mPS_L1$tpm_level <- "tpm<=1"
+mPS_L2$tpm_level <- "tpm<=5"
+mPS_L3$tpm_level <- "tpm<=10"
+mPS_L4$tpm_level <- "tpm>10"
+
+mPS_tpm <- rbind(mPS_L1,mPS_L2,mPS_L3,mPS_L4)
+mPS_tpm$tpm_level <- factor(mPS_tpm$tpm_level, levels = c("tpm<=1", "tpm<=5", "tpm<=10", "tpm>10")) #ordering of tpm level cateogries in plots
+
+p1 <- ggplot(mPS_tpm, aes(factor(mPS_tpm$tpm_level),mPS_tpm$k4m1_to_peak))
+p1 + geom_violin() + geom_boxplot(width=0.1, color="grey", alpha =0.2)+ ylim(-2000, 2000) + xlab("") + ylab("distance to nearest H3K4me1 (bp)") +coord_flip()
+
