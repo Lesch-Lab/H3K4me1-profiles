@@ -1,0 +1,29 @@
+import os,sys
+
+align_fn = sys.argv[1]
+tpm_fn = sys.argv[2]
+
+tpm_fr = file(tpm_fn,'r')
+tpm_list = []
+
+for line in tpm_fr:
+    tmp = line.split()
+    tpm_v = tmp[-1]
+    tss_v = tmp[0].split('.')[0]
+    tpm_list.append([tss_v, tpm_v])
+
+tpm_fr.close()
+
+align_fr = file(align_fn, 'r')
+header = align_fn.split('.')[0]
+outfile = file('%s_tpm.txt' %header, 'w')
+
+for line in align_fr:
+    if line[0]=='g':
+        outfile.write('%s   tpm\n' %line[0:-1])
+    tss_n = line.split()[0]
+    for i in range(len(tpm_list)):
+        if tss_n != tpm_list[i][0]: continue
+        outfile.write('%s   %s\n' %(line[0:-1], tpm_list[i][1])) 
+     
+
